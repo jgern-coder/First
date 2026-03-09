@@ -363,7 +363,6 @@ const COMP_DB = [
   { title: "Unbroken",                  year: 2014, budget: 65,   domestic: 115.6, owkd: 31.2,  genres: ["Faith / Inspirational","War / Historical","Drama"] },
   { title: "The Case for Christ",       year: 2017, budget: 3,    domestic: 14.5,  owkd: 4.2,   genres: ["Faith / Inspirational","Drama"] },
   { title: "Woodlawn",                  year: 2015, budget: 7.5,  domestic: 13.9,  owkd: 3.6,   genres: ["Faith / Inspirational","Sports","Drama"] },
-  { title: "His Only Son",              year: 2023, budget: 0.25, domestic: 12.3,  owkd: 5.2,   genres: ["Faith / Inspirational","Drama","War / Historical"] },
   { title: "Facing the Giants",         year: 2006, budget: 0.1,  domestic: 10.0,  owkd: 1.7,   genres: ["Faith / Inspirational","Sports","Drama"] },
   { title: "Breakthrough",             year: 2019, budget: 11,   domestic: 50.0,  owkd: 11.5,  genres: ["Faith / Inspirational","Drama","Live-Action Family / Kids"] },
   { title: "Unplanned",                year: 2019, budget: 6,    domestic: 19.0,  owkd: 6.4,   genres: ["Faith / Inspirational","Drama"] },
@@ -454,7 +453,6 @@ const COMP_DB = [
   { title: "Tár",                       year: 2022, budget: 35,   domestic: 16.4,  owkd: 0.5,   genres: ["Drama","Musical"] },
   { title: "Elvis",                     year: 2022, budget: 85,   domestic: 151.2, owkd: 31.1,  genres: ["Drama","Musical"] },
   { title: "Maestro",                   year: 2023, budget: 80,   domestic: 16.2,  owkd: 2.1,   genres: ["Drama","Musical"] },
-  { title: "The Holdovers",             year: 2023, budget: 20,   domestic: 36.0,  owkd: 0.3,   genres: ["Drama","Comedy"] },
 
   // ── Comedy ────────────────────────────────
   { title: "Barbie",                    year: 2023, budget: 145,  domestic: 636.2, owkd: 162.0, genres: ["Comedy","Romantic Comedy"] },
@@ -627,6 +625,8 @@ function SelectField({ label, value, onChange, options, hint }) {
 }
 
 function BudgetSlider({ value, onChange }) {
+  const [exactInput, setExactInput] = useState("");
+
   const tiers = [
     { label: "Micro (<$5M)", val: 3_000_000 },
     { label: "Low ($5–20M)", val: 12_000_000 },
@@ -635,6 +635,23 @@ function BudgetSlider({ value, onChange }) {
     { label: "High ($100–175M)", val: 140_000_000 },
     { label: "Tentpole ($175–250M)", val: 210_000_000 },
   ];
+
+  const handleExactChange = (e) => {
+    const raw = e.target.value;
+    setExactInput(raw);
+    const parsed = parseFloat(raw);
+    if (!isNaN(parsed) && parsed > 0) {
+      onChange(Math.round(parsed * 1_000_000));
+    }
+  };
+
+  const handleTierClick = (val) => {
+    setExactInput("");
+    onChange(val);
+  };
+
+  const isTierSelected = (val) => value === val && exactInput === "";
+
   return (
     <div className="mb-5">
       <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1.5">
@@ -644,9 +661,9 @@ function BudgetSlider({ value, onChange }) {
         {tiers.map((t) => (
           <button
             key={t.label}
-            onClick={() => onChange(t.val)}
+            onClick={() => handleTierClick(t.val)}
             className={`text-xs px-2 py-2 rounded-lg border transition-all font-medium ${
-              value === t.val
+              isTierSelected(t.val)
                 ? "bg-indigo-600 border-indigo-500 text-white"
                 : "bg-gray-800 border-gray-700 text-gray-400 hover:border-indigo-500 hover:text-white"
             }`}
@@ -655,9 +672,24 @@ function BudgetSlider({ value, onChange }) {
           </button>
         ))}
       </div>
+      <div className="mt-3 flex items-center gap-3">
+        <div className="flex-1 relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">$</span>
+          <input
+            type="number"
+            min="0"
+            step="0.1"
+            value={exactInput}
+            onChange={handleExactChange}
+            placeholder="Enter exact budget in millions (optional)"
+            className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg pl-6 pr-10 py-2 text-sm focus:outline-none focus:border-indigo-500 placeholder-gray-600"
+          />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">M</span>
+        </div>
+      </div>
       {value > 0 && (
         <p className="text-xs text-indigo-400 mt-2 font-semibold">
-          Selected: {fmt(value)} production budget
+          {exactInput ? `Exact budget: $${parseFloat(exactInput).toFixed(1)}M` : `Selected: ${fmt(value)} production budget`}
         </p>
       )}
     </div>
@@ -702,11 +734,14 @@ function FactorRow({ label, mult, note }) {
 // COMP BROWSER MODAL (genre-aware, searchable, sortable)
 // ─────────────────────────────────────────────
 
-function CompBrowser({ selectedGenre, projectBudget, onPick, onClose }) {
+function CompBrowser({ selectedGenre, projectBudget, onPick, onClose, mode = "multi", alreadyCount = 0 }) {
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState("legs");
+  const [sortBy, setSortBy] = useState("alpha");
   const [showAll, setShowAll] = useState(false);
-  const [budgetFilter, setBudgetFilter] = useState("all"); // "angel" | "mid" | "all"
+  const [budgetFilter, setBudgetFilter] = useState("all");
+  const [pending, setPending] = useState(new Set()); // set of "title+year" keys (multi mode)
+
+  const maxNew = 6 - alreadyCount;
 
   const genreMatches = (film) =>
     !selectedGenre || film.genres.includes(selectedGenre);
@@ -726,6 +761,7 @@ function CompBrowser({ selectedGenre, projectBudget, onPick, onClose }) {
     .filter(searchMatches)
     .filter(budgetMatches)
     .sort((a, b) => {
+      if (sortBy === "alpha") return a.title.localeCompare(b.title);
       if (sortBy === "legs") {
         const legsA = a.owkd ? a.domestic / a.owkd : 0;
         const legsB = b.owkd ? b.domestic / b.owkd : 0;
@@ -741,171 +777,259 @@ function CompBrowser({ selectedGenre, projectBudget, onPick, onClose }) {
   const genreCount = COMP_SUGGESTIONS_ALL.filter((f) => f.domestic && genreMatches(f)).length;
   const totalCount = COMP_SUGGESTIONS_ALL.filter((f) => f.domestic).length;
 
+  const togglePending = (f) => {
+    const key = f.title + f.year;
+    setPending((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else if (next.size < maxNew) {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
+  const handleConfirm = () => {
+    const selected = COMP_SUGGESTIONS_ALL.filter((f) => pending.has(f.title + f.year));
+    onPick(selected);
+    onClose();
+  };
+
+  const subtitleText = mode === "multi"
+    ? pending.size > 0
+      ? `${pending.size} selected · click to toggle`
+      : (selectedGenre && !showAll ? `${genreCount} films matching "${selectedGenre}"` : `${totalCount} films`)
+    : (selectedGenre && !showAll ? `${genreCount} films matching "${selectedGenre}"` : `All ${totalCount} films`);
+
   return (
     <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full shadow-2xl mb-4">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-800">
-          <div>
-            <h3 className="font-black text-white text-base">Select Comp Film</h3>
-            {selectedGenre && (
-              <p className="text-xs text-indigo-400 mt-0.5">
-                {showAll ? `All ${totalCount} films` : `${genreCount} films matching "${selectedGenre}"`}
-              </p>
-            )}
-          </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-white text-lg font-bold px-2">✕</button>
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-800">
+        <div>
+          <h3 className="font-black text-white text-base">
+            {mode === "multi" ? "Select Comp Films" : "Replace Comp Film"}
+          </h3>
+          <p className="text-xs text-indigo-400 mt-0.5">{subtitleText}</p>
         </div>
+        <button onClick={onClose} className="text-gray-500 hover:text-white text-lg font-bold px-2">✕</button>
+      </div>
 
-        {/* Controls */}
-        <div className="p-3 border-b border-gray-800 flex flex-col gap-2">
-          <div className="flex gap-2">
-            <input
-              autoFocus
-              type="text"
-              placeholder="Search by title…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 placeholder-gray-600"
-            />
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 appearance-none cursor-pointer"
+      {/* Selection tip — multi mode only */}
+      {mode === "multi" && (
+        <div className="px-4 py-2.5 bg-indigo-950 border-b border-indigo-900 flex items-start gap-2">
+          <span className="text-indigo-400 shrink-0 mt-0.5">💡</span>
+          <p className="text-xs text-indigo-300 leading-relaxed">
+            <span className="font-bold text-indigo-200">Pick comps that match your audience and tone first</span> — then add 1–2 films with a similar budget to anchor the financial estimate. A mix of both gives the strongest projection.
+          </p>
+        </div>
+      )}
+
+      {/* Controls */}
+      <div className="p-3 border-b border-gray-800 flex flex-col gap-2">
+        <div className="flex gap-2">
+          <input
+            autoFocus
+            type="text"
+            placeholder="Search by title…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 placeholder-gray-600"
+          />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 appearance-none cursor-pointer"
+          >
+            <option value="alpha">Sort: A → Z</option>
+            <option value="legs">Sort: Audience Legs</option>
+            <option value="domestic">Sort: Domestic Gross</option>
+            <option value="mult">Sort: Budget Multiplier</option>
+            <option value="budget">Sort: Budget (low→high)</option>
+            <option value="year">Sort: Year</option>
+          </select>
+        </div>
+        <div className="flex gap-2 flex-wrap items-center">
+          <span className="text-xs text-gray-500 font-semibold">Budget scale:</span>
+          {[
+            { id: "angel", label: "Angel-scale (≤$15M)" },
+            { id: "mid",   label: "Under $40M" },
+            { id: "all",   label: "All budgets" },
+          ].map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setBudgetFilter(f.id)}
+              className={`text-xs px-2.5 py-1 rounded-lg border transition-colors font-semibold ${
+                budgetFilter === f.id
+                  ? "bg-indigo-700 border-indigo-600 text-white"
+                  : "bg-gray-800 border-gray-700 text-gray-400 hover:border-indigo-500"
+              }`}
             >
-              <option value="legs">Sort: Audience Legs</option>
-              <option value="domestic">Sort: Domestic Gross</option>
-              <option value="mult">Sort: Budget Multiplier</option>
-              <option value="budget">Sort: Budget (low→high)</option>
-              <option value="year">Sort: Year</option>
-            </select>
-          </div>
-          <div className="flex gap-2 flex-wrap items-center">
-            <span className="text-xs text-gray-500 font-semibold">Budget scale:</span>
-            {[
-              { id: "angel", label: "Angel-scale (≤$15M)" },
-              { id: "mid",   label: "Under $40M" },
-              { id: "all",   label: "All budgets" },
-            ].map((f) => (
-              <button
-                key={f.id}
-                onClick={() => setBudgetFilter(f.id)}
-                className={`text-xs px-2.5 py-1 rounded-lg border transition-colors font-semibold ${
-                  budgetFilter === f.id
-                    ? "bg-indigo-700 border-indigo-600 text-white"
-                    : "bg-gray-800 border-gray-700 text-gray-400 hover:border-indigo-500"
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-            {selectedGenre && (
-              <button
-                onClick={() => setShowAll((v) => !v)}
-                className={`text-xs px-2.5 py-1 rounded-lg border transition-colors font-semibold ml-auto ${
-                  showAll
-                    ? "bg-gray-700 border-gray-600 text-white"
-                    : "bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500"
-                }`}
-              >
-                {showAll ? "Genre Only" : "All Genres"}
-              </button>
-            )}
-          </div>
+              {f.label}
+            </button>
+          ))}
+          {selectedGenre && (
+            <button
+              onClick={() => setShowAll((v) => !v)}
+              className={`text-xs px-2.5 py-1 rounded-lg border transition-colors font-semibold ml-auto ${
+                showAll
+                  ? "bg-gray-700 border-gray-600 text-white"
+                  : "bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500"
+              }`}
+            >
+              {showAll ? "Genre Only" : "All Genres"}
+            </button>
+          )}
         </div>
+      </div>
 
-        {/* Film list */}
-        <div className="p-2">
-          {filtered.length === 0 && (
-            <div className="py-8 px-4">
-              <div className="text-center mb-4 text-gray-600">
-                <p className="text-3xl mb-2">🎞️</p>
-                <p className="font-semibold">"{search}" isn't in our database</p>
-                {selectedGenre && !showAll && (
-                  <button onClick={() => setShowAll(true)} className="mt-1 text-indigo-400 text-sm hover:underline">
-                    Try searching all genres
-                  </button>
-                )}
-              </div>
-              {search.length >= 2 && (
-                <div className="bg-amber-950 border border-amber-900 rounded-xl p-4">
-                  <p className="text-sm font-semibold text-amber-200 mb-1">
-                    Look up "{search}" on these sources:
-                  </p>
-                  <p className="text-xs text-amber-600 mb-3">
-                    Find its domestic gross and production budget, then close this panel and enter the numbers manually.
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { label: "The Numbers", url: `https://www.the-numbers.com/search?searchterm=${encodeURIComponent(search)}` },
-                      { label: "Box Office Mojo", url: `https://www.boxofficemojo.com/search/?q=${encodeURIComponent(search)}` },
-                      { label: "IMDb", url: `https://www.imdb.com/find/?q=${encodeURIComponent(search)}&s=tt&ttype=ft` },
-                    ].map((link) => (
-                      <a
-                        key={link.label}
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-sm bg-amber-900 hover:bg-amber-800 text-amber-100 px-3 py-1.5 rounded-lg font-semibold transition-colors"
-                      >
-                        {link.label} ↗
-                      </a>
-                    ))}
-                  </div>
-                </div>
+      {/* Film list */}
+      <div className="p-2">
+        {filtered.length === 0 && (
+          <div className="py-8 px-4">
+            <div className="text-center mb-4 text-gray-600">
+              <p className="text-3xl mb-2">🎞️</p>
+              <p className="font-semibold">"{search}" isn't in our database</p>
+              {selectedGenre && !showAll && (
+                <button onClick={() => setShowAll(true)} className="mt-1 text-indigo-400 text-sm hover:underline">
+                  Try searching all genres
+                </button>
               )}
             </div>
-          )}
-          {filtered.map((f) => {
-            const m = f.domestic / f.budget;
-            const legs = f.owkd ? f.domestic / f.owkd : null;
-            const isGenreMatch = genreMatches(f);
-            const isLargeBudget = f.budget > 40;
+            {search.length >= 2 && (
+              <div className="bg-amber-950 border border-amber-900 rounded-xl p-4">
+                <p className="text-sm font-semibold text-amber-200 mb-1">
+                  Look up "{search}" on these sources:
+                </p>
+                <p className="text-xs text-amber-600 mb-3">
+                  Find its domestic gross and production budget, then close this panel and enter the numbers manually.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { label: "The Numbers", url: `https://www.the-numbers.com/search?searchterm=${encodeURIComponent(search)}` },
+                    { label: "Box Office Mojo", url: `https://www.boxofficemojo.com/search/?q=${encodeURIComponent(search)}` },
+                    { label: "IMDb", url: `https://www.imdb.com/find/?q=${encodeURIComponent(search)}&s=tt&ttype=ft` },
+                  ].map((link) => (
+                    <a
+                      key={link.label}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-sm bg-amber-900 hover:bg-amber-800 text-amber-100 px-3 py-1.5 rounded-lg font-semibold transition-colors"
+                    >
+                      {link.label} ↗
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        {filtered.map((f) => {
+          const m = f.domestic / f.budget;
+          const legs = f.owkd ? f.domestic / f.owkd : null;
+          const isGenreMatch = genreMatches(f);
+          const isLargeBudget = f.budget > 40;
+          const key = f.title + f.year;
+          const isSelected = pending.has(key);
+          const isDisabled = mode === "multi" && !isSelected && pending.size >= maxNew;
+
+          const filmInfo = (
+            <>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`text-sm font-semibold transition-colors truncate ${isSelected ? "text-indigo-200" : "text-white"}`}>
+                    {f.title}
+                  </span>
+                  <span className="text-xs text-gray-600">{f.year}</span>
+                  {isLargeBudget && (
+                    <span className="text-xs text-orange-600 bg-orange-950 border border-orange-900 px-1.5 py-0.5 rounded font-semibold">
+                      large budget
+                    </span>
+                  )}
+                  {!isGenreMatch && showAll && (
+                    <span className="text-xs text-gray-600 bg-gray-800 px-1.5 py-0.5 rounded">
+                      {f.genres[0]}
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-3 mt-0.5 text-xs text-gray-500 flex-wrap">
+                  <span>Budget: <span className={isLargeBudget ? "text-orange-500" : "text-gray-400"}>${f.budget}M</span></span>
+                  <span>Domestic: <span className="text-gray-400">${f.domestic}M</span></span>
+                  {legs !== null && (
+                    <span>Legs: <span className={`font-semibold ${legs >= 6 ? "text-emerald-400" : legs >= 4 ? "text-yellow-400" : legs >= 2.8 ? "text-blue-400" : "text-gray-400"}`}>{legs.toFixed(1)}×</span></span>
+                  )}
+                </div>
+              </div>
+              <div className={`text-sm font-black shrink-0 ${
+                m >= 4 ? "text-emerald-400" : m >= 2 ? "text-yellow-400" : m >= 1 ? "text-orange-400" : "text-red-400"
+              }`}>
+                {m.toFixed(1)}×
+              </div>
+            </>
+          );
+
+          if (mode === "multi") {
             return (
               <button
-                key={f.title + f.year}
-                onClick={() => { onPick(f); onClose(); }}
-                className={`w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-800 transition-colors group flex items-center justify-between gap-3 ${isLargeBudget ? "opacity-60" : ""}`}
+                key={key}
+                onClick={() => !isDisabled && togglePending(f)}
+                className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-3 ${
+                  isSelected
+                    ? "bg-indigo-950 border border-indigo-700"
+                    : isDisabled
+                    ? "opacity-30 cursor-not-allowed"
+                    : `hover:bg-gray-800 ${isLargeBudget ? "opacity-60" : ""}`
+                }`}
               >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold text-white group-hover:text-indigo-300 transition-colors truncate">
-                      {f.title}
-                    </span>
-                    <span className="text-xs text-gray-600">{f.year}</span>
-                    {isLargeBudget && (
-                      <span className="text-xs text-orange-600 bg-orange-950 border border-orange-900 px-1.5 py-0.5 rounded font-semibold">
-                        large budget
-                      </span>
-                    )}
-                    {!isGenreMatch && showAll && (
-                      <span className="text-xs text-gray-600 bg-gray-800 px-1.5 py-0.5 rounded">
-                        {f.genres[0]}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex gap-3 mt-0.5 text-xs text-gray-500 flex-wrap">
-                    <span>Budget: <span className={isLargeBudget ? "text-orange-500" : "text-gray-400"}>${f.budget}M</span></span>
-                    <span>Domestic: <span className="text-gray-400">${f.domestic}M</span></span>
-                    {legs !== null && (
-                      <span>Legs: <span className={`font-semibold ${legs >= 6 ? "text-emerald-400" : legs >= 4 ? "text-yellow-400" : legs >= 2.8 ? "text-blue-400" : "text-gray-400"}`}>{legs.toFixed(1)}×</span></span>
-                    )}
-                  </div>
-                </div>
-                <div className={`text-sm font-black shrink-0 ${
-                  m >= 4 ? "text-emerald-400" : m >= 2 ? "text-yellow-400" : m >= 1 ? "text-orange-400" : "text-red-400"
+                <div className={`w-4 h-4 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
+                  isSelected ? "bg-indigo-500 border-indigo-400" : "border-gray-600"
                 }`}>
-                  {m.toFixed(1)}×
+                  {isSelected && <span className="text-white text-xs leading-none">✓</span>}
                 </div>
+                {filmInfo}
               </button>
             );
-          })}
-        </div>
+          }
 
+          // Single mode — immediate pick (for replacing a specific comp row)
+          return (
+            <button
+              key={key}
+              onClick={() => { onPick([f]); onClose(); }}
+              className={`w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-800 transition-colors group flex items-center justify-between gap-3 ${isLargeBudget ? "opacity-60" : ""}`}
+            >
+              {filmInfo}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Footer */}
+      {mode === "multi" ? (
+        <div className="p-3 border-t border-gray-800 flex items-center justify-between gap-3">
+          <p className="text-xs text-gray-600">
+            {filtered.length} shown · {pending.size}/{maxNew} selected
+          </p>
+          <button
+            onClick={handleConfirm}
+            disabled={pending.size === 0}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
+              pending.size > 0
+                ? "bg-indigo-600 hover:bg-indigo-500 text-white"
+                : "bg-gray-800 text-gray-600 cursor-not-allowed"
+            }`}
+          >
+            {pending.size > 0 ? `Add ${pending.size} Comp${pending.size > 1 ? "s" : ""}` : "Select films above"}
+          </button>
+        </div>
+      ) : (
         <div className="p-3 border-t border-gray-800 text-center">
           <p className="text-xs text-gray-600">
             {filtered.length} film{filtered.length !== 1 ? "s" : ""} shown · Multiplier = Domestic ÷ Budget
           </p>
         </div>
+      )}
     </div>
   );
 }
@@ -1041,12 +1165,6 @@ function CompFilmRow({ comp, index, onChange, onRemove, onOpenBrowser }) {
         </div>
       </div>
 
-      {parseMillion(comp.budget) > 40 && (
-        <div className="mt-3 flex items-start gap-2 bg-orange-950 border border-orange-900 rounded-lg px-3 py-2 text-xs text-orange-300">
-          <span className="shrink-0">⚠</span>
-          <span>This film's budget (${comp.budget}M) is significantly above Angel's typical release range. International box office and franchise economics may distort the multiplier — treat as directional reference only.</span>
-        </div>
-      )}
       {m !== null && (
         <div className="mt-3 pt-2 border-t border-gray-700 flex flex-wrap gap-x-5 gap-y-1.5 text-xs">
           <span className="text-gray-500">
@@ -1107,16 +1225,23 @@ export default function BoxOfficeProjector() {
 
 
   // ── comp state handlers ──
-  const addComp = () => {
-    if (comps.length < 6) {
-      const newIndex = comps.length;
-      setComps((c) => [...c, emptyComp()]);
-      setBrowserOpen(newIndex); // open browser immediately for the new row
-    }
-  };
+  const openMultiBrowser = () => setBrowserOpen("multi");
   const removeComp = (i) => setComps((c) => c.filter((_, idx) => idx !== i));
   const updateComp = (i, field, val) =>
     setComps((c) => c.map((row, idx) => (idx === i ? { ...row, [field]: val } : row)));
+
+  // Multi-select: append all chosen films as new comp rows (up to 6 total)
+  const pickMultiple = (films) =>
+    setComps((c) => {
+      const slots = 6 - c.length;
+      const toAdd = films.slice(0, slots).map((s) => ({
+        title: s.title, year: String(s.year), budget: String(s.budget),
+        domestic: String(s.domestic || ""), owkd: s.owkd ? String(s.owkd) : "",
+      }));
+      return [...c, ...toAdd];
+    });
+
+  // Single-select: replace a specific comp row
   const pickSuggestion = (i, s) =>
     setComps((c) =>
       c.map((row, idx) =>
@@ -1231,8 +1356,10 @@ export default function BoxOfficeProjector() {
     const owkdHigh = high * owkdRatio;
 
     // ── WW estimate ──
-    const domShareOfWW = ["Superhero / Comic Book", "Action / Adventure", "Animated (Family)"].includes(genre)
-      ? 0.38 : 0.48;
+    // Angel's international distribution is limited — domestic typically represents
+    // 65–75% of worldwide gross vs. 38–48% for major studio releases.
+    const domShareOfWW = ["Action / Adventure", "Animated (Family)", "Superhero / Comic Book"].includes(genre)
+      ? 0.65 : 0.75;
     const wwMid = mid / domShareOfWW;
 
     // ── Financials ──
@@ -1537,23 +1664,31 @@ export default function BoxOfficeProjector() {
         {/* ─── COMP FILMS TAB ─── */}
         {activeTab === "comps" && (
           <div>
-            {/* Inline comp browser — shown when a row's Browse button is clicked */}
+            {/* Inline comp browser */}
             {browserOpen !== false && (
               <CompBrowser
                 selectedGenre={genre}
                 projectBudget={budget / 1_000_000}
-                onPick={(film) => { pickSuggestion(browserOpen, film); setBrowserOpen(false); }}
+                mode={typeof browserOpen === "number" ? "single" : "multi"}
+                alreadyCount={comps.length}
+                onPick={(films) => {
+                  if (typeof browserOpen === "number") {
+                    // single mode — replace that specific row
+                    pickSuggestion(browserOpen, films[0]);
+                  } else {
+                    // multi mode — append all selected films
+                    pickMultiple(films);
+                  }
+                  setBrowserOpen(false);
+                }}
                 onClose={() => setBrowserOpen(false)}
               />
             )}
             <div className="mb-6">
               <h2 className="text-lg font-black text-white mb-1">Comparable Films</h2>
               <p className="text-sm text-gray-400 max-w-2xl">
-                Enter films comparable in genre, tone, budget, and audience. Click{" "}
-                <span className="text-indigo-400 font-semibold">Browse Films</span> on any row to search
-                our database of 100+ films — filtered to your selected genre by default, with the option
-                to search across all. Comps carry increasing weight in the blended scenario (35% → 60%
-                as you add more).
+                Browse our database of 100+ films and select multiple comps at once using the checkboxes.
+                Comps carry increasing weight in the blended scenario (35% → 60% as you add more).
               </p>
               {genre && (
                 <div className="mt-2 inline-flex items-center gap-2 bg-indigo-950 border border-indigo-900 rounded-lg px-3 py-1.5 text-xs text-indigo-300">
@@ -1567,12 +1702,12 @@ export default function BoxOfficeProjector() {
 
             {comps.length === 0 ? (
               <button
-                onClick={addComp}
+                onClick={openMultiBrowser}
                 className="w-full py-10 mb-4 rounded-xl border-2 border-dashed border-gray-700 hover:border-indigo-500 hover:bg-indigo-950 transition-all group"
               >
                 <p className="text-3xl mb-2">🔍</p>
                 <p className="text-white font-bold text-base group-hover:text-indigo-300 transition-colors">Browse Comp Films</p>
-                <p className="text-sm text-gray-500 mt-1">Search 100+ titles filtered to your genre</p>
+                <p className="text-sm text-gray-500 mt-1">Select multiple titles at once from 100+ films</p>
                 <p className="text-xs text-gray-600 mt-3">or enter a film manually after adding</p>
               </button>
             ) : (
@@ -1589,10 +1724,10 @@ export default function BoxOfficeProjector() {
                 ))}
                 {comps.length < 6 && (
                   <button
-                    onClick={addComp}
+                    onClick={openMultiBrowser}
                     className="w-full py-3 rounded-xl border-2 border-dashed border-gray-700 text-gray-400 hover:border-indigo-500 hover:text-indigo-400 font-semibold text-sm transition-all mb-2"
                   >
-                    + Add Another Comp
+                    + Add More Comps
                   </button>
                 )}
               </>
@@ -1636,12 +1771,6 @@ export default function BoxOfficeProjector() {
                     <span className="text-gray-500 font-semibold">Audience Legs</span> is the primary resonance signal — it shows whether audiences who saw the film went back and told others. Typical studio releases run 2–2.5×; community-driven films often exceed 4–6×.{" "}
                     <span className="text-gray-500 font-semibold">Financial Efficiency</span> is most meaningful when comp budgets are comparable to your project.
                   </p>
-                  {validComps.some(c => parseMillion(c.budget) > 40) && (
-                    <div className="mt-2 flex items-start gap-2 bg-orange-950 border border-orange-900 rounded-lg px-3 py-2 text-xs text-orange-300">
-                      <span className="shrink-0">⚠</span>
-                      <span>One or more comps have large budgets. Their budget multipliers reflect franchise economics, international revenue, and above-the-line costs that don't apply to Angel-scale releases — use the Audience Legs metric as your primary reference.</span>
-                    </div>
-                  )}
                 </div>
               );
             })()}
