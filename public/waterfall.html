@@ -717,6 +717,10 @@ function ResultsSection({r,c,title,budget,gDBO,gIBO,pna,screens,revShare,mg,vPct
 
     // ── EXPANDABLE: Theatrical Waterfall ──
     e(Expandable,{title:'Theatrical Waterfall — Full Breakdown',icon:'🎬',defaultOpen:true,forceOpen:printMode},
+      e('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}},
+        e('p',{style:{fontSize:12,color:'#6b7280',margin:0}},'DBO: ',e('strong',{style:{color:'#111827'}},fmt$(gDBO))),
+        e('a',{href:'/',style:{fontSize:12,color:'#2563eb',textDecoration:'none',fontWeight:500}},'↩ Try a different DBO scenario')
+      ),
       gDBO===0
         ? e('p',{style:{fontSize:13,color:'#9ca3af',textAlign:'center',padding:'12px 0'}},'Enter a Gross DBO value on Step 1 to see the detailed waterfall.')
         : e('div',null,
@@ -888,9 +892,13 @@ function ScenarioSelect({onSelect}){
   return e('div',{style:{minHeight:'100vh',background:'#f9fafb',display:'flex',alignItems:'center',justifyContent:'center',padding:24}},
     e('div',{style:{maxWidth:560,width:'100%'}},
       e('div',{style:{textAlign:'center',marginBottom:32}},
-        e('div',{style:{fontSize:11,color:'#9ca3af',letterSpacing:2,textTransform:'uppercase',marginBottom:8}},'Angel Studios'),
+        e('div',{style:{display:'flex',alignItems:'center',justifyContent:'center',gap:8,marginBottom:8}},
+          e('div',{style:{fontSize:11,color:'#9ca3af',letterSpacing:2,textTransform:'uppercase'}},'Angel Studios'),
+          e('span',{style:{fontSize:10,fontWeight:700,color:'#6b7280',background:'#f3f4f6',border:'1px solid #e5e7eb',borderRadius:4,padding:'1px 6px',letterSpacing:1}},'BETA')
+        ),
         e('h1',{style:{fontSize:28,fontWeight:700,color:'#111827',marginBottom:8}},'Modeled Revenue Scenarios'),
-        e('p',{style:{color:'#6b7280',fontSize:15}},'Choose a scenario type to get started.')
+        e('p',{style:{color:'#6b7280',fontSize:15,marginBottom:16}},'Choose a scenario type to get started.'),
+        e('p',{style:{fontSize:11,color:'#9ca3af',maxWidth:440,margin:'0 auto',lineHeight:1.6}},'This tool is in beta and produces illustrative estimates only. Figures are not projections, guarantees, or investment advice. Always verify assumptions against primary sources and apply independent due diligence.')
       ),
       e('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}},
         e('button',{onClick:()=>onSelect('theatrical'),style:{background:'white',border:'2px solid #e5e7eb',borderRadius:16,padding:'24px 20px',cursor:'pointer',textAlign:'left',transition:'border-color 0.15s'},onMouseEnter:ev=>ev.currentTarget.style.borderColor='#9ca3af',onMouseLeave:ev=>ev.currentTarget.style.borderColor='#e5e7eb'},
@@ -909,11 +917,13 @@ function ScenarioSelect({onSelect}){
 }
 
 function App(){
-  const [mode,setMode]=useState(null);
+  // Read bridge data synchronously so mode + DBO are set on first render (no ScenarioSelect flash)
+  const _bridge=(()=>{try{const r=localStorage.getItem('dboReturn');return r?JSON.parse(r):null;}catch(e){return null;}})();
+  const [mode,setMode]=useState(_bridge&&_bridge.mode?_bridge.mode:null);
   const [step,setStep]=useState(0);
   const [title,setTitle]=useState("My Film Project");
   const [budget,setBudget]=useState(4000000);
-  const [gDBO,setGDBO]=useState(25000000);
+  const [gDBO,setGDBO]=useState(_bridge&&_bridge.dbo>0?_bridge.dbo:25000000);
   const [screens,setScreens]=useState(2300);
   const [pna,setPna]=useState(5000000);
   const [gIBO,setGIBO]=useState(3000000);
@@ -941,8 +951,10 @@ function App(){
   const [printMode,setPrintMode]=useState(false);
   const [dboSource,setDboSource]=useState(null);
   useEffect(()=>{
-    const ret=localStorage.getItem('dboReturn');
-    if(ret){try{const d=JSON.parse(ret);if(d&&d.dbo>0){setGDBO(d.dbo);setDboSource(d.scenario||'Box Office Projector');}}catch(e){}localStorage.removeItem('dboReturn');}
+    if(_bridge){
+      if(_bridge.dbo>0&&_bridge.scenario)setDboSource(_bridge.scenario);
+      localStorage.removeItem('dboReturn');
+    }
   },[]);
 
   const params={gDBO,screens,pna,gIBO,revShare,mg,
@@ -1023,6 +1035,7 @@ function App(){
         title&&e('div',{style:{fontSize:14,color:'#2563eb',fontWeight:500}},title)
       ),
       e('div',{style:{textAlign:'right'}},
+        e('a',{href:'/',style:{fontSize:11,color:'#2563eb',background:'none',border:'none',cursor:'pointer',marginBottom:6,textDecoration:'none',display:'block',marginLeft:'auto',fontWeight:500}},'← Box Office Projector'),
         e('button',{onClick:()=>{setMode(null);setStep(0);},style:{fontSize:11,color:'#9ca3af',background:'none',border:'none',cursor:'pointer',marginBottom:6,textDecoration:'underline',display:'block',marginLeft:'auto'}},'Change scenario'),
         e('div',{style:{fontSize:12,color:'#9ca3af',marginBottom:4}},'Step '+(step+1)+' of '+activeSections.length),
         e('div',{className:'progress-bar'},e('div',{className:'progress-fill',style:{width:prog+'%'}}))
