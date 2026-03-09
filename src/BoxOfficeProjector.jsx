@@ -1643,24 +1643,31 @@ function BoxOfficeProjectorInner() {
               </div>
             )}
 
-            {/* Big numbers */}
+            {/* Big numbers — click any to run waterfall */}
+            <p className="text-xs text-center text-gray-500 mb-2 tracking-wide">
+              Click a scenario to continue to the 10-Year Waterfall Analysis →
+            </p>
             <div className="grid grid-cols-3 gap-4 mb-8">
               {[
                 { label: "Downside", sub: "conservative scenario", val: result.low, color: "#ef4444" },
                 { label: "Base Case", sub: "illustrative midpoint", val: result.mid, color: "#6366f1" },
                 { label: "Upside", sub: "optimistic scenario", val: result.high, color: "#10b981" },
               ].map((s) => (
-                <div key={s.label}
-                  className="bg-gray-900 border rounded-xl p-4 text-center"
-                  style={{ borderColor: s.color + "44" }}
+                <button key={s.label}
+                  onClick={() => {
+                    localStorage.setItem("dboReturn", JSON.stringify({ dbo: s.val, scenario: s.label, mode: "theatrical", title: title || "" }));
+                    window.location.href = "/waterfall.html";
+                  }}
+                  className="bg-gray-900 border rounded-xl p-4 text-center w-full cursor-pointer transition-all hover:opacity-80 hover:scale-[1.02]"
+                  style={{ borderColor: s.color + "66" }}
                 >
                   <p className="text-xs uppercase tracking-widest font-semibold mb-0.5" style={{ color: s.color }}>
                     {s.label}
                   </p>
                   <p className="text-xs text-gray-600 mb-1">{s.sub}</p>
                   <p className="text-2xl font-black text-white">{fmt(s.val)}</p>
-                  <p className="text-xs text-gray-500 mt-1">Domestic · Speculative</p>
-                </div>
+                  <p className="text-xs mt-2 font-semibold" style={{ color: s.color }}>→ Run Waterfall</p>
+                </button>
               ))}
             </div>
 
@@ -1888,68 +1895,6 @@ function BoxOfficeProjectorInner() {
                 before drawing any conclusions. Errors in comp data will skew results.
                 Always apply your own judgment and due diligence.
               </p>
-            </div>
-
-            {/* → Continue to Waterfall Analysis */}
-            <div className="rounded-xl p-5 mb-4" style={{ background: "#0d0d14", border: "1px solid #2d2d4e" }}>
-              <div className="flex items-center gap-2 mb-1">
-                <span style={{ color: "#f59e0b" }}>📊</span>
-                <h3 className="text-sm font-bold" style={{ color: "#fbbf24" }}>Continue to Waterfall Analysis</h3>
-              </div>
-              <p className="text-xs mb-4" style={{ color: "#6b7280" }}>
-                Choose your release track, then pick a DBO scenario to send to the 10-Year Waterfall.
-              </p>
-
-              {/* Track 1: Full Theatrical */}
-              <div className="rounded-lg p-3 mb-3" style={{ background: "#0c1a0e", border: "1px solid #14532d" }}>
-                <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#34d399" }}>
-                  🎬 Full Theatrical Release
-                </p>
-                <p className="text-xs mb-3" style={{ color: "#6b7280" }}>
-                  Full waterfall — theatrical → post-theatrical windows → Angel Guild SVOD.
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { label: "Downside", val: result.low,  borderCol: "#7f1d1d", textCol: "#f87171", bg: "#1c0a0a" },
-                    { label: "Base Case", val: result.mid, borderCol: "#312e81", textCol: "#818cf8", bg: "#0d0b2a" },
-                    { label: "Upside",   val: result.high, borderCol: "#064e3b", textCol: "#34d399", bg: "#022c1a" },
-                  ].map((s) => (
-                    <button
-                      key={s.label}
-                      onClick={() => {
-                        localStorage.setItem("dboReturn", JSON.stringify({ dbo: s.val, scenario: s.label, mode: "theatrical" }));
-                        window.location.href = "/waterfall.html";
-                      }}
-                      style={{ border: `1px solid ${s.borderCol}`, background: s.bg }}
-                      className="rounded-lg p-3 text-center cursor-pointer transition-opacity hover:opacity-75"
-                    >
-                      <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: s.textCol }}>{s.label}</p>
-                      <p className="text-white font-black text-sm">{fmt(s.val)}</p>
-                      <p className="text-xs mt-1" style={{ color: "#4b5563" }}>Use this →</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Track 2: SVOD Only */}
-              <div className="rounded-lg p-3" style={{ background: "#0a0f1e", border: "1px solid #1e3a8a" }}>
-                <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#93c5fd" }}>
-                  📺 Angel SVOD Only
-                </p>
-                <p className="text-xs mb-3" style={{ color: "#6b7280" }}>
-                  Model Angel Guild membership growth and streaming residuals only — no theatrical inputs required.
-                </p>
-                <button
-                  onClick={() => {
-                    localStorage.setItem("dboReturn", JSON.stringify({ dbo: 0, scenario: null, mode: "svod_only" }));
-                    window.location.href = "/waterfall.html";
-                  }}
-                  style={{ border: "1px solid #1e3a8a", background: "#0d1b3e" }}
-                  className="w-full rounded-lg py-2.5 text-sm font-bold cursor-pointer transition-opacity hover:opacity-75"
-                >
-                  <span style={{ color: "#93c5fd" }}>Go to SVOD Waterfall →</span>
-                </button>
-              </div>
             </div>
 
             <button
