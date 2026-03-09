@@ -921,7 +921,7 @@ function App(){
   const _bridge=(()=>{try{const r=localStorage.getItem('dboReturn');return r?JSON.parse(r):null;}catch(e){return null;}})();
   const [mode,setMode]=useState(_bridge&&_bridge.mode?_bridge.mode:null);
   const [step,setStep]=useState(0);
-  const [title,setTitle]=useState("My Film Project");
+  const [title,setTitle]=useState(_bridge&&_bridge.title?_bridge.title:"My Film Project");
   const [budget,setBudget]=useState(4000000);
   const [gDBO,setGDBO]=useState(_bridge&&_bridge.dbo>0?_bridge.dbo:25000000);
   const [screens,setScreens]=useState(2300);
