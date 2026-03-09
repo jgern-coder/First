@@ -1885,34 +1885,64 @@ function BoxOfficeProjectorInner() {
             </div>
 
             {/* → Continue to Waterfall Analysis */}
-            <div className="rounded-xl p-5 mb-4" style={{ background: "#0c1a0e", border: "1px solid #14532d" }}>
+            <div className="rounded-xl p-5 mb-4" style={{ background: "#0d0d14", border: "1px solid #2d2d4e" }}>
               <div className="flex items-center gap-2 mb-1">
                 <span style={{ color: "#f59e0b" }}>📊</span>
                 <h3 className="text-sm font-bold" style={{ color: "#fbbf24" }}>Continue to Waterfall Analysis</h3>
               </div>
               <p className="text-xs mb-4" style={{ color: "#6b7280" }}>
-                Send a DBO estimate to the 10-Year Waterfall to model full filmmaker returns — theatrical, post-theatrical windows, and Angel Guild SVOD.
+                Choose your release track, then pick a DBO scenario to send to the 10-Year Waterfall.
               </p>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { label: "Downside", val: result.low,  borderCol: "#7f1d1d", textCol: "#f87171", bg: "#1c0a0a" },
-                  { label: "Base Case", val: result.mid, borderCol: "#312e81", textCol: "#818cf8", bg: "#0d0b2a" },
-                  { label: "Upside",   val: result.high, borderCol: "#064e3b", textCol: "#34d399", bg: "#022c1a" },
-                ].map((s) => (
-                  <button
-                    key={s.label}
-                    onClick={() => {
-                      localStorage.setItem("dboReturn", JSON.stringify({ dbo: s.val, scenario: s.label }));
-                      window.location.href = "/waterfall.html";
-                    }}
-                    style={{ border: `1px solid ${s.borderCol}`, background: s.bg }}
-                    className="rounded-lg p-3 text-center cursor-pointer transition-opacity hover:opacity-75"
-                  >
-                    <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: s.textCol }}>{s.label}</p>
-                    <p className="text-white font-black text-sm">{fmt(s.val)}</p>
-                    <p className="text-xs mt-1" style={{ color: "#4b5563" }}>Use this →</p>
-                  </button>
-                ))}
+
+              {/* Track 1: Full Theatrical */}
+              <div className="rounded-lg p-3 mb-3" style={{ background: "#0c1a0e", border: "1px solid #14532d" }}>
+                <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#34d399" }}>
+                  🎬 Full Theatrical Release
+                </p>
+                <p className="text-xs mb-3" style={{ color: "#6b7280" }}>
+                  Full waterfall — theatrical → post-theatrical windows → Angel Guild SVOD.
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: "Downside", val: result.low,  borderCol: "#7f1d1d", textCol: "#f87171", bg: "#1c0a0a" },
+                    { label: "Base Case", val: result.mid, borderCol: "#312e81", textCol: "#818cf8", bg: "#0d0b2a" },
+                    { label: "Upside",   val: result.high, borderCol: "#064e3b", textCol: "#34d399", bg: "#022c1a" },
+                  ].map((s) => (
+                    <button
+                      key={s.label}
+                      onClick={() => {
+                        localStorage.setItem("dboReturn", JSON.stringify({ dbo: s.val, scenario: s.label, mode: "theatrical" }));
+                        window.location.href = "/waterfall.html";
+                      }}
+                      style={{ border: `1px solid ${s.borderCol}`, background: s.bg }}
+                      className="rounded-lg p-3 text-center cursor-pointer transition-opacity hover:opacity-75"
+                    >
+                      <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: s.textCol }}>{s.label}</p>
+                      <p className="text-white font-black text-sm">{fmt(s.val)}</p>
+                      <p className="text-xs mt-1" style={{ color: "#4b5563" }}>Use this →</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Track 2: SVOD Only */}
+              <div className="rounded-lg p-3" style={{ background: "#0a0f1e", border: "1px solid #1e3a8a" }}>
+                <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#93c5fd" }}>
+                  📺 Angel SVOD Only
+                </p>
+                <p className="text-xs mb-3" style={{ color: "#6b7280" }}>
+                  Model Angel Guild membership growth and streaming residuals only — no theatrical inputs required.
+                </p>
+                <button
+                  onClick={() => {
+                    localStorage.setItem("dboReturn", JSON.stringify({ dbo: 0, scenario: null, mode: "svod_only" }));
+                    window.location.href = "/waterfall.html";
+                  }}
+                  style={{ border: "1px solid #1e3a8a", background: "#0d1b3e" }}
+                  className="w-full rounded-lg py-2.5 text-sm font-bold cursor-pointer transition-opacity hover:opacity-75"
+                >
+                  <span style={{ color: "#93c5fd" }}>Go to SVOD Waterfall →</span>
+                </button>
               </div>
             </div>
 
