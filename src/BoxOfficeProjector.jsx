@@ -1336,11 +1336,17 @@ function BoxOfficeProjectorInner() {
                 Speculative estimates for internal planning purposes only.
               </p>
             </div>
-            <div className="shrink-0 flex items-center gap-2 bg-amber-950 border border-amber-800 rounded-xl px-4 py-2.5 self-start">
-              <span className="text-amber-400 text-lg">✦</span>
-              <div>
-                <p className="text-xs font-black uppercase tracking-widest text-amber-400">Angel Studios</p>
-                <p className="text-xs text-amber-700 leading-tight">Distribution model applied</p>
+            <div className="shrink-0 flex flex-col gap-2 self-start">
+              <div className="flex items-center gap-2 bg-amber-950 border border-amber-800 rounded-xl px-4 py-2.5">
+                <span className="text-amber-400 text-lg">✦</span>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-widest text-amber-400">Angel Studios</p>
+                  <p className="text-xs text-amber-700 leading-tight">Distribution model applied</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 bg-gray-900 border border-gray-700 rounded-xl px-4 py-1.5">
+                <span className="text-xs font-black uppercase tracking-widest text-gray-400">⚗ Beta</span>
+                <span className="text-xs text-gray-600">· Internal use only</span>
               </div>
             </div>
           </div>
