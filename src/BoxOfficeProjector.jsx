@@ -170,7 +170,7 @@ const IP_DATA = {
 // Multiplier is intentionally neutral (1.0): Angel's distribution model
 // amplifies films that already align with their audience (captured via
 // genre + quadrant selection above). It does not uniformly boost all titles.
-// P&A ratio reflects Angel's leaner community-activation spend vs. major studios.
+// P&A ratio of 0.50 reflects Angel's typical marketing investment per production dollar.
 // ─────────────────────────────────────────────
 const ANGEL_DISTRIBUTION = {
   mult: 1.0,
@@ -178,6 +178,25 @@ const ANGEL_DISTRIBUTION = {
   label: "Angel Studios",
   note: "Community-activation model. Performance is highly content-dependent — Faith/Inspirational and Family titles with a motivated core audience have the highest upside.",
 };
+
+// ─────────────────────────────────────────────
+// ANGEL HISTORICAL RELEASES
+// Source: Box Office Mojo / The Numbers / Angel press releases
+// Used for comparable benchmarking in results panel
+// ─────────────────────────────────────────────
+const ANGEL_HISTORICAL = [
+  { title: "His Only Son",           year: 2023, budget: 0.25, domestic: 12.3,  owkd: 5.2,  genre: "Faith / Inspirational" },
+  { title: "Sound of Freedom",       year: 2023, budget: 14.5, domestic: 184.2, owkd: 14.2, genre: "Action / Adventure"     },
+  { title: "After Death",            year: 2023, budget: 1.0,  domestic: 12.0,  owkd: 5.6,  genre: "Documentary"           },
+  { title: "The Shift",              year: 2023, budget: 6.4,  domestic: 7.7,   owkd: 2.5,  genre: "Sci-Fi / Thriller"     },
+  { title: "Cabrini",                year: 2024, budget: 25.0, domestic: 28.0,  owkd: 7.5,  genre: "Drama"                 },
+  { title: "Sight",                  year: 2024, budget: 10.0, domestic: 7.1,   owkd: 3.3,  genre: "Drama"                 },
+  { title: "Sound of Hope",          year: 2024, budget: 6.0,  domestic: 19.0,  owkd: 5.5,  genre: "Faith / Inspirational" },
+  { title: "Bonhoeffer",             year: 2024, budget: 20.0, domestic: 12.2,  owkd: 5.1,  genre: "Drama"                 },
+  { title: "Homestead",              year: 2024, budget: 8.0,  domestic: 20.0,  owkd: 6.0,  genre: "Action / Adventure"   },
+  { title: "The King of Kings",      year: 2025, budget: 25.0, domestic: 61.0,  owkd: 19.4, genre: "Faith / Inspirational" },
+  { title: "David",                  year: 2025, budget: 60.0, domestic: 80.0,  owkd: 22.0, genre: "Animated (Family)"    },
+];
 
 // ─────────────────────────────────────────────
 // QUADRANT SELECTOR COMPONENT
@@ -344,7 +363,10 @@ const COMP_DB = [
   { title: "Unbroken",                  year: 2014, budget: 65,   domestic: 115.6, owkd: 31.2,  genres: ["Faith / Inspirational","War / Historical","Drama"] },
   { title: "The Case for Christ",       year: 2017, budget: 3,    domestic: 14.5,  owkd: 4.2,   genres: ["Faith / Inspirational","Drama"] },
   { title: "Woodlawn",                  year: 2015, budget: 7.5,  domestic: 13.9,  owkd: 3.6,   genres: ["Faith / Inspirational","Sports","Drama"] },
-  { title: "His Only Son",              year: 2023, budget: 3,    domestic: 5.9,   owkd: 3.2,   genres: ["Faith / Inspirational","Drama","War / Historical"] },
+  { title: "His Only Son",              year: 2023, budget: 0.25, domestic: 12.3,  owkd: 5.2,   genres: ["Faith / Inspirational","Drama","War / Historical"] },
+  { title: "Facing the Giants",         year: 2006, budget: 0.1,  domestic: 10.0,  owkd: 1.7,   genres: ["Faith / Inspirational","Sports","Drama"] },
+  { title: "Breakthrough",             year: 2019, budget: 11,   domestic: 50.0,  owkd: 11.5,  genres: ["Faith / Inspirational","Drama","Live-Action Family / Kids"] },
+  { title: "Unplanned",                year: 2019, budget: 6,    domestic: 19.0,  owkd: 6.4,   genres: ["Faith / Inspirational","Drama"] },
   { title: "Jesus Revolution",          year: 2023, budget: 15,   domestic: 52.3,  owkd: 15.6,  genres: ["Faith / Inspirational","Drama"] },
   { title: "Cabrini",                   year: 2024, budget: 35,   domestic: 22.0,  owkd: 6.2,   genres: ["Faith / Inspirational","Drama","War / Historical"] },
   { title: "The Chosen: Season 4",      year: 2024, budget: 10,   domestic: 32.0,  owkd: 10.1,  genres: ["Faith / Inspirational","Drama"] },
@@ -367,7 +389,15 @@ const COMP_DB = [
   { title: "Talk to Me",                year: 2023, budget: 4.5,  domestic: 32.4,  owkd: 10.5,  genres: ["Horror"] },
   { title: "Insidious",                 year: 2011, budget: 1.5,  domestic: 54.0,  owkd: 13.3,  genres: ["Horror"] },
 
-  // ── Action / Adventure ────────────────────
+  // ── Action / Adventure (Angel-scale) ─────
+  { title: "Act of Valor",              year: 2012, budget: 12,   domestic: 70.0,  owkd: 24.5,  genres: ["Action / Adventure","War / Historical"] },
+  { title: "No Escape",                 year: 2015, budget: 5,    domestic: 27.3,  owkd: 8.1,   genres: ["Action / Adventure","Sci-Fi / Thriller"] },
+  { title: "The Shallows",              year: 2016, budget: 17,   domestic: 55.1,  owkd: 16.7,  genres: ["Action / Adventure","Sci-Fi / Thriller"] },
+  { title: "Wind River",                year: 2017, budget: 11,   domestic: 33.8,  owkd: 4.8,   genres: ["Action / Adventure","Drama","Sci-Fi / Thriller"] },
+  { title: "Hell or High Water",        year: 2016, budget: 12,   domestic: 26.9,  owkd: 3.6,   genres: ["Action / Adventure","Drama"] },
+  { title: "Eye in the Sky",            year: 2015, budget: 16,   domestic: 18.7,  owkd: 4.4,   genres: ["Action / Adventure","War / Historical","Drama"] },
+
+  // ── Action / Adventure (large budget) ────
   { title: "Top Gun: Maverick",         year: 2022, budget: 170,  domestic: 718.7, owkd: 126.7, genres: ["Action / Adventure"] },
   { title: "Mission: Impossible – Dead Reckoning", year: 2023, budget: 291, domestic: 172.1, owkd: 56.2, genres: ["Action / Adventure"] },
   { title: "John Wick: Chapter 4",      year: 2023, budget: 100,  domestic: 187.1, owkd: 73.8,  genres: ["Action / Adventure"] },
@@ -391,7 +421,11 @@ const COMP_DB = [
   { title: "Thor: Love and Thunder",    year: 2022, budget: 250,  domestic: 343.3, owkd: 144.2, genres: ["Superhero / Comic Book","Action / Adventure","Comedy"] },
   { title: "Aquaman",                   year: 2018, budget: 160,  domestic: 335.1, owkd: 67.9,  genres: ["Superhero / Comic Book","Action / Adventure"] },
 
-  // ── Animated (Family) ─────────────────────
+  // ── Animated (Family) (Angel-scale) ──────
+  { title: "Hoodwinked!",               year: 2005, budget: 8,    domestic: 51.4,  owkd: 11.2,  genres: ["Animated (Family)","Comedy"] },
+  { title: "Alpha and Omega",           year: 2010, budget: 20,   domestic: 25.1,  owkd: 9.0,   genres: ["Animated (Family)","Live-Action Family / Kids"] },
+
+  // ── Animated (Family) (large budget) ─────
   { title: "The Super Mario Bros. Movie", year: 2023, budget: 100, domestic: 574.9, owkd: 137.6, genres: ["Animated (Family)","Comedy"] },
   { title: "Elemental",                 year: 2023, budget: 200,  domestic: 154.4, owkd: 29.6,  genres: ["Animated (Family)","Drama"] },
   { title: "Puss in Boots: The Last Wish", year: 2022, budget: 90, domestic: 184.2, owkd: 12.5, genres: ["Animated (Family)","Action / Adventure","Comedy"] },
@@ -403,7 +437,14 @@ const COMP_DB = [
   { title: "Toy Story 4",               year: 2019, budget: 200,  domestic: 434.0, owkd: 120.9, genres: ["Animated (Family)","Drama","Comedy"] },
   { title: "The Bad Guys",              year: 2022, budget: 73,   domestic: 97.9,  owkd: 23.1,  genres: ["Animated (Family)","Action / Adventure","Comedy"] },
 
-  // ── Drama ────────────────────────────────
+  // ── Drama (Angel-scale) ──────────────────
+  { title: "The Best Exotic Marigold Hotel", year: 2012, budget: 10,  domestic: 46.4,  owkd: 3.4,   genres: ["Drama","Comedy","Romantic Comedy"] },
+  { title: "Gifted",                     year: 2017, budget: 7,    domestic: 25.5,  owkd: 6.6,   genres: ["Drama","Live-Action Family / Kids"] },
+  { title: "Harriet",                    year: 2019, budget: 17,   domestic: 44.1,  owkd: 11.6,  genres: ["Drama","War / Historical","Faith / Inspirational"] },
+  { title: "Just Mercy",                 year: 2019, budget: 21,   domestic: 34.9,  owkd: 4.1,   genres: ["Drama","Faith / Inspirational"] },
+  { title: "The Holdovers",              year: 2023, budget: 20,   domestic: 36.0,  owkd: 0.3,   genres: ["Drama","Comedy"] },
+
+  // ── Drama (large budget) ─────────────────
   { title: "Oppenheimer",               year: 2023, budget: 100,  domestic: 329.9, owkd: 82.5,  genres: ["Drama","War / Historical","Sci-Fi / Thriller"] },
   { title: "The Blind Side",            year: 2009, budget: 29,   domestic: 256.0, owkd: 34.1,  genres: ["Drama","Sports","Faith / Inspirational"] },
   { title: "The Revenant",              year: 2015, budget: 135,  domestic: 183.6, owkd: 10.3,  genres: ["Drama","Action / Adventure","War / Historical"] },
@@ -510,6 +551,10 @@ const COMP_DB = [
   { title: "Free Willy",                     year: 1993, budget: 20,  domestic: 77.7,  owkd: 9.0,   genres: ["Live-Action Family / Kids","Drama"] },
   { title: "Beethoven",                      year: 1992, budget: 18,  domestic: 57.1,  owkd: 7.5,   genres: ["Live-Action Family / Kids","Comedy"] },
   { title: "Flubber",                        year: 1997, budget: 80,  domestic: 92.9,  owkd: 19.0,  genres: ["Live-Action Family / Kids","Comedy","Sci-Fi / Thriller"] },
+  { title: "Soul Surfer",                    year: 2011, budget: 18,  domestic: 43.8,  owkd: 10.1,  genres: ["Live-Action Family / Kids","Drama","Faith / Inspirational","Sports"] },
+  { title: "October Baby",                   year: 2011, budget: 1,   domestic: 5.3,   owkd: 1.7,   genres: ["Live-Action Family / Kids","Drama","Faith / Inspirational"] },
+  { title: "Moms' Night Out",                year: 2014, budget: 5,   domestic: 10.4,  owkd: 4.2,   genres: ["Live-Action Family / Kids","Comedy","Faith / Inspirational"] },
+  { title: "When the Game Stands Tall",      year: 2014, budget: 25,  domestic: 25.5,  owkd: 9.2,   genres: ["Live-Action Family / Kids","Sports","Drama","Faith / Inspirational"] },
 
   // ── Documentary ──────────────────────────
   { title: "March of the Penguins",     year: 2005, budget: 8,    domestic: 77.4,  owkd: 0.7,   genres: ["Documentary"] },
@@ -1706,13 +1751,96 @@ export default function BoxOfficeProjector() {
                 </div>
                 <div>
                   <p className="text-gray-500 text-xs uppercase tracking-wider mb-1">Theatrical ROI (Mid)</p>
-                  <p className={`font-bold text-lg ${result.roiMid >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                  <p className={`font-bold text-lg ${result.roiMid >= 0 ? "text-emerald-400" : "text-orange-400"}`}>
                     {pct(result.roiMid)}
                   </p>
-                  <p className="text-gray-600 text-xs">Domestic theatrical only</p>
+                  <p className="text-gray-600 text-xs">Domestic theatrical only — excludes SVOD, Guild & international</p>
                 </div>
               </div>
             </div>
+
+            {/* Angel Distribution Context */}
+            {(() => {
+              const prodBudgetM = budget / 1_000_000;
+              const allInM = prodBudgetM * 1.35;
+              const netDomesticMid = (result.mid / 1_000_000) * 0.52;
+              const theatricalRecovery = netDomesticMid / allInM;
+              const breakEvenDomestic = allInM / 0.52;
+
+              // Find closest Angel historical films by budget proximity
+              const sorted = [...ANGEL_HISTORICAL].sort((a, b) =>
+                Math.abs(a.budget - prodBudgetM) - Math.abs(b.budget - prodBudgetM)
+              );
+              const closest = sorted.slice(0, 3);
+
+              const recoveryColor = theatricalRecovery >= 1.0 ? "text-emerald-400"
+                : theatricalRecovery >= 0.6 ? "text-yellow-400"
+                : "text-orange-400";
+              const recoveryLabel = theatricalRecovery >= 1.0 ? "Theatrically self-sustaining"
+                : theatricalRecovery >= 0.6 ? "Strong multi-window candidate"
+                : "Multi-window model essential";
+
+              return (
+                <div className="bg-gray-900 rounded-xl border border-indigo-900 p-5 mb-6">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-amber-400">✦</span>
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-amber-400">Angel Distribution Context</h3>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Benchmarked against Angel's theatrical release history. Domestic theatrical is one window in Angel's multi-revenue model — Guild memberships, SVOD, and international continue generating returns well beyond the theatrical run.
+                  </p>
+
+                  {/* Theatrical Recovery */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-gray-800 rounded-lg p-3">
+                      <p className="text-gray-500 text-xs uppercase mb-1">All-In Cost (Production + P&A)</p>
+                      <p className="font-black text-white text-lg">${allInM.toFixed(1)}M</p>
+                      <p className="text-gray-600 text-xs">${prodBudgetM.toFixed(1)}M production + ${(prodBudgetM * 0.35).toFixed(1)}M P&A</p>
+                    </div>
+                    <div className="bg-gray-800 rounded-lg p-3">
+                      <p className="text-gray-500 text-xs uppercase mb-1">Theatrical Recovery (Base Case)</p>
+                      <p className={`font-black text-lg ${recoveryColor}`}>{Math.round(theatricalRecovery * 100)}%</p>
+                      <p className={`text-xs font-semibold ${recoveryColor}`}>{recoveryLabel}</p>
+                    </div>
+                  </div>
+
+                  {theatricalRecovery < 1.0 && (
+                    <div className="bg-indigo-950 border border-indigo-800 rounded-lg px-3 py-2.5 mb-4 text-xs text-indigo-200 leading-relaxed">
+                      <span className="font-bold text-indigo-100">Break-even domestic threshold: ${breakEvenDomestic.toFixed(1)}M.</span>{" "}
+                      Films below this threshold on domestic theatrical have still found full profitability through Angel's SVOD platform, Angel Guild membership engagement, and international distribution partnerships — a model unique to Angel's community-first approach.
+                    </div>
+                  )}
+
+                  {/* Closest Angel comps */}
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Closest Angel Releases by Budget</p>
+                  <div className="space-y-2">
+                    {closest.map((f) => {
+                      const fAllIn = f.budget * 1.35;
+                      const fNetDom = f.domestic * 0.52;
+                      const fRecovery = fNetDom / fAllIn;
+                      const fLegs = f.domestic / f.owkd;
+                      const fRecoveryColor = fRecovery >= 1.0 ? "text-emerald-400" : fRecovery >= 0.6 ? "text-yellow-400" : "text-orange-400";
+                      return (
+                        <div key={f.title} className="bg-gray-800 rounded-lg px-3 py-2.5 flex items-center justify-between gap-3 flex-wrap">
+                          <div>
+                            <span className="text-sm font-semibold text-white">{f.title}</span>
+                            <span className="text-xs text-gray-500 ml-2">{f.year} · ${f.budget}M budget</span>
+                          </div>
+                          <div className="flex gap-4 text-xs">
+                            <span className="text-gray-500">Domestic: <span className="text-white font-bold">${f.domestic}M</span></span>
+                            <span className="text-gray-500">Legs: <span className={`font-bold ${fLegs >= 5 ? "text-emerald-400" : fLegs >= 3 ? "text-yellow-400" : "text-gray-300"}`}>{fLegs.toFixed(1)}×</span></span>
+                            <span className="text-gray-500">Theatrical recovery: <span className={`font-bold ${fRecoveryColor}`}>{Math.round(fRecovery * 100)}%</span></span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-gray-600 mt-3">
+                    Angel has successfully released films across a wide range of theatrical recovery profiles. The community model and owned distribution platform create a long-tail revenue opportunity that traditional P&L analysis does not fully capture.
+                  </p>
+                </div>
+              );
+            })()}
 
             {/* Comp detail table */}
             {result.hasComps && result.compDetails.length > 0 && (
