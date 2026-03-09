@@ -922,11 +922,11 @@ function App(){
   const [mode,setMode]=useState(_bridge&&_bridge.mode?_bridge.mode:null);
   const [step,setStep]=useState(0);
   const [title,setTitle]=useState(_bridge&&_bridge.title?_bridge.title:"My Film Project");
-  const [budget,setBudget]=useState(4000000);
+  const [budget,setBudget]=useState(0);
   const [gDBO,setGDBO]=useState(_bridge&&_bridge.dbo>0?_bridge.dbo:25000000);
   const [screens,setScreens]=useState(2300);
-  const [pna,setPna]=useState(5000000);
-  const [gIBO,setGIBO]=useState(3000000);
+  const [pna,setPna]=useState(0);
+  const [gIBO,setGIBO]=useState(0);
   const [revShare,setRevShare]=useState(50);
   const [mg,setMg]=useState(0);
   // Post-theatrical income % (from sheet col E - mid-range defaults)
