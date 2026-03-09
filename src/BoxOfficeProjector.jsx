@@ -1884,6 +1884,38 @@ function BoxOfficeProjectorInner() {
               </p>
             </div>
 
+            {/* → Continue to Waterfall Analysis */}
+            <div className="rounded-xl p-5 mb-4" style={{ background: "#0c1a0e", border: "1px solid #14532d" }}>
+              <div className="flex items-center gap-2 mb-1">
+                <span style={{ color: "#f59e0b" }}>📊</span>
+                <h3 className="text-sm font-bold" style={{ color: "#fbbf24" }}>Continue to Waterfall Analysis</h3>
+              </div>
+              <p className="text-xs mb-4" style={{ color: "#6b7280" }}>
+                Send a DBO estimate to the 10-Year Waterfall to model full filmmaker returns — theatrical, post-theatrical windows, and Angel Guild SVOD.
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: "Downside", val: result.low,  borderCol: "#7f1d1d", textCol: "#f87171", bg: "#1c0a0a" },
+                  { label: "Base Case", val: result.mid, borderCol: "#312e81", textCol: "#818cf8", bg: "#0d0b2a" },
+                  { label: "Upside",   val: result.high, borderCol: "#064e3b", textCol: "#34d399", bg: "#022c1a" },
+                ].map((s) => (
+                  <button
+                    key={s.label}
+                    onClick={() => {
+                      localStorage.setItem("dboReturn", JSON.stringify({ dbo: s.val, scenario: s.label }));
+                      window.location.href = "/waterfall.html";
+                    }}
+                    style={{ border: `1px solid ${s.borderCol}`, background: s.bg }}
+                    className="rounded-lg p-3 text-center cursor-pointer transition-opacity hover:opacity-75"
+                  >
+                    <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: s.textCol }}>{s.label}</p>
+                    <p className="text-white font-black text-sm">{fmt(s.val)}</p>
+                    <p className="text-xs mt-1" style={{ color: "#4b5563" }}>Use this →</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <button
               onClick={() => setActiveTab("inputs")}
               className="w-full py-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold text-sm transition-all"
